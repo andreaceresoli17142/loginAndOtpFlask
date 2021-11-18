@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title> your secure area </title>
+{% endblock %}
+
+{% block body %}
+<h1>you are in your secure area</h1>
+
+<form action="http://127.0.0.1:5000" method="get">
+    <button type="submit">go back</button>
+ </form>
+{% endblock %}
