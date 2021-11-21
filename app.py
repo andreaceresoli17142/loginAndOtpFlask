@@ -2,24 +2,28 @@ from os import error
 from flask import Flask, render_template, url_for, request, redirect
 from datetime import datetime
 from logsyslib import LoginManager
-import sys
-import threading
+import sys, threading, re
 
 loginManager = LoginManager()
 
-#TODO: inserisci il limite di tempo in tokendata
-#TODO: sostituisci le liste in logsyslib con i dizionari
+validateMailRegex = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
+validatePwRegex = re.compile(r'^[A-Za-z0-9@#$%^&+=]{8,}$')
+
+#DONE: inserisci il limite di tempo in tokendata
+#DONE: controlla input
+#DONE: sostituisci le liste in logsyslib con i dizionari
 #TODO: css e styling
-#TODO: cryptare le comunicazioni
 #? cryptare l'email?
+#? cryptare le comunicazioni?
+#? admin page?
 
 app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
 def mainPath():
+    return render_template('index.html')
     # error = request.args.get("er")
     # print("testing output", file=sys.stdout)
-    return render_template('index.html')
 
 @app.route('/login', methods=['POST'])
 def loginPath():
@@ -45,7 +49,7 @@ def verifyWithOtpPath():
     if loginManager.verifyOtp(request.form['email'], request.form['otpToken']):
         return render_template('secureArea.html')
 
-    error = ' otp token invalid.'
+    error = ' otp token is invalid or has expired.'
     return render_template('index.html', error=error)
 
 @app.route('/signUp', methods=['GET', 'POST'])
@@ -54,6 +58,15 @@ def signUpPath():
         if request.form['email'] == None or request.form['password'] == None or request.form['user'] == None:
             error = ' please insert email, password and username'
             return render_template('signUp.html', error=error)
+
+        if not re.fullmatch(validateMailRegex, request.form['email']):
+            error = ' invalid email.'
+            return render_template('signUp.html', error=error)
+
+        if not re.fullmatch(validatePwRegex, request.form['password']):
+            error = ' invalid password.'
+            return render_template('signUp.html', error=error)
+
         if loginManager.addUser(request.form['user'], request.form['email'], request.form['password']):
             return render_template('index.html')
         error = ' username or email is already used'

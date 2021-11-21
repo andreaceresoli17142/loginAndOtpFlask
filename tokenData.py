@@ -9,7 +9,7 @@ class TokenData:
         self.token = str(randrange( 0, 999999 )).rjust( 6, "0" )[0:6]
         self.cTime = int(time.time())
     def checkTime(self):
-        if int(time.time()) + DELTATIME > self.cTime:
+        if int(time.time()) > self.cTime + DELTATIME:
             return False
         return True
 

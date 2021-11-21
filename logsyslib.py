@@ -3,48 +3,51 @@ from userLoginData import UsrLoginData
 from tokenData import TokenData
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from sys import platform
 
+if platform == "linux" or platform == "linux2":
+    dataPath = "data//usr.dat"
+elif platform == "win32":
+    dataPath = "data\\usr.dat"
 
 class LoginManager:
-    loginInfo = []
-    pwReset = []
-    otpInfo = []
+    loginInfo = {}
+    pwReset = {}
+    otpInfo = {}
 
     def __init__(self):
         self.__loadUsers()
 
     def __loadUsers(self):
 
-        with open("data\\usr.dat") as usrDataFile:
+        with open(dataPath) as usrDataFile:
             for line in usrDataFile:
                 splitted = line.split(',')
-                self.loginInfo.append(UsrLoginData( splitted[0], splitted[1], splitted[3], True, int(splitted[2]) ))
+                self.loginInfo.update({splitted[1]: UsrLoginData( splitted[0], splitted[1], splitted[3], True, int(splitted[2]))})
 
     def addUser(self, username, email, password):
-        #! check if valid
-        if True:
-            self.loginInfo.append(UsrLoginData(username, email, password))
-            with open('data\\usr.dat', 'a') as usrDataFile:
-                usrDataFile.write("\n"+self.loginInfo[-1].toString())
+        if not self.userExists(email):
+            self.loginInfo.update({email: UsrLoginData(username, email, password)})
+            with open(dataPath, 'a') as usrDataFile:
+                usrDataFile.write("\n"+self.loginInfo[email].toString())
             return True
+        return False
 
     def login(self, email, password ):
-        for user in self.loginInfo:
-            if user.email == email:
-                if user.verifyPw( password ):
-                    return True
-                return False
+        if email in self.loginInfo:
+            if self.loginInfo[email].verifyPw( password ):
+                return True
+        return False
 
     def userExists(self, email):
-        for user in self.loginInfo:
-            if user.email == email:
-                return True
+        if email in self.loginInfo:
+            return True
         return False
 
     def sendResetPwRequest(self, email):
         if self.userExists(email):
             pwResetObj = TokenData(email)
-            self.pwReset.append( pwResetObj )
+            self.pwReset.update( {email:pwResetObj} )
 
             msg = MIMEMultipart()
             msg['From'] = 'noReplyMail@gmail.com'
@@ -62,23 +65,20 @@ class LoginManager:
             server.quit()
 
     def resetPwRequest(self, email, token, newPw):
-        for resObj in self.pwReset:
-            if resObj.email == email:
-                if resObj.checkTime():
-                    if resObj.resetToken == token:
-                        for user in self.loginInfo:
-                            if user.email == email:
-                                #! need to update usr.dat file with new password
-                                user.newPassword( newPw )
+        if email in self.pwReset:
+            if self.pwReset[email].checkTime():
+                if self.pwReset[email].resetToken == token:
+                    if self.userExists(email):
+                        self.loginInfo[email].newPassword( newPw )
+                        self.pwReset.pop(email)
                         return True
-                self.pwReset.remove(resObj)
-        #* since two tokens might be equal we have to search through all the token objects
+                self.pwReset.pop(email)
         return False
 
     def requestOtp(self, email):
-        if self.userExists(email):
+        if self.userExists(email) and not email in self.otpInfo:
             otpTokenData = TokenData(email)
-            self.otpInfo.append( otpTokenData )
+            self.otpInfo.update({email : otpTokenData})
 
             msg = MIMEMultipart()
             msg['From'] = 'noReplyMail@gmail.com'
@@ -94,23 +94,23 @@ class LoginManager:
             email,
             msg=msg.as_string())
             server.quit()
+        print( self.otpInfo )
 
     def verifyOtp(self, email, token):
-        for otpToken in self.otpInfo:
-            if otpToken.email == email:
-                if otpToken.checkTime():
-                    if otpToken.token == token:
-                        return True
-                self.otpInfo.remove(otpToken)
-        #* since two tokens might be equal we have to search through all the token objects
+        if email in self.otpInfo:
+            if self.otpInfo[email].checkTime():
+                if self.otpInfo[email].token == token:
+                    self.otpInfo.pop(email)
+                    return True
+            self.otpInfo.pop(email)
         return False
 
 def main():
     manager = LoginManager()
-    # manager.sendResetPwRequest( "andrea.ceresoli03@gmail.com" )
-    # print(manager.resetPwRequest( "andrea.ceresoli03@gmail.com", input( "insertToken: " ), "test1" ))
     manager.requestOtp( "andrea.ceresoli03@gmail.com" )
     print(manager.verifyOtp( "andrea.ceresoli03@gmail.com", input( "insertToken: ") ))
+    # manager.sendResetPwRequest( "andrea.ceresoli03@gmail.com" )
+    # print(manager.resetPwRequest( "andrea.ceresoli03@gmail.com", input( "insertToken: " ), "test1" ))
 
 if __name__ == "__main__":
     main( )
