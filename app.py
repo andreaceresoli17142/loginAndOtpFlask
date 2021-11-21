@@ -13,9 +13,6 @@ validatePwRegex = re.compile(r'^[A-Za-z0-9@#$%^&+=]{8,}$')
 #DONE: controlla input
 #DONE: sostituisci le liste in logsyslib con i dizionari
 #TODO: css e styling
-#? cryptare l'email?
-#? cryptare le comunicazioni?
-#? admin page?
 
 app = Flask(__name__)
 
