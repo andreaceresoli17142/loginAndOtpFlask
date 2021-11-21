@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title> otp verification by mail</title>
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <h1>Please insert your otp</h1>
+        <br>
+        <form action="/otp" method="post">
+            <input type="hidden" placeholder="Email" name="email" value={{otpEmail}} >
+            <input type="text" placeholder="OtpToken" name="otpToken">
+            <input class="btn btn-default" type="submit" value="verify">
+        </form>
+    </div>
+{% endblock %}

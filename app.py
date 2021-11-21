@@ -9,11 +9,6 @@ loginManager = LoginManager()
 validateMailRegex = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
 validatePwRegex = re.compile(r'^[A-Za-z0-9@#$%^&+=]{8,}$')
 
-#DONE: inserisci il limite di tempo in tokendata
-#DONE: controlla input
-#DONE: sostituisci le liste in logsyslib con i dizionari
-#TODO: css e styling
-
 app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
@@ -61,7 +56,7 @@ def signUpPath():
             return render_template('signUp.html', error=error)
 
         if not re.fullmatch(validatePwRegex, request.form['password']):
-            error = ' invalid password.'
+            error = ' invalid password ( password must be at least 8 characters long ).'
             return render_template('signUp.html', error=error)
 
         if loginManager.addUser(request.form['user'], request.form['email'], request.form['password']):
